@@ -20,5 +20,5 @@ def return_value(h3_index, h4_level:int):
     data = from_db.return_value_from_df(h3_index, h4_level)
     return data
 
-if __name__ == '__main__':
-    uvicorn.run(app)
+# if __name__ == '__main__':
+#     uvicorn.run(app)
