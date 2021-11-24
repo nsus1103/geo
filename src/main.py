@@ -8,7 +8,8 @@ app = FastAPI()
 @app.get('/')
 def welcome():
 
-    return {'Message':r'Use: /api/h3_index={h3_index}&h4_level={h4_level}'}
+    return {'Message':r'Use: /api/h3_index={h3_index}&h4_level={h4_level}',
+            'Example': '/api/h3_index=843c191ffffffff&h4_level=4'}
 
 # h3_index = '843c123ffffffff'
 @app.get('/api/h3_index={h3_index}&h4_level={h4_level}')
