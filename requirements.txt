@@ -1,0 +1,6 @@
+h3
+fastapi
+uvicorn
+geopandas
+pandas
+psycopg2==2.8.6
