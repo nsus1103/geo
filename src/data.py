@@ -5,7 +5,7 @@ import sys
 from pandas.io.sql import table_exists
 import psycopg2
 import psycopg2.extras as extras
-import heroku_config as config
+# import heroku_config as config
 import os
 import dbutils as dbutils
 from sqlalchemy import create_engine
