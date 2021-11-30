@@ -32,17 +32,12 @@ def load_data(engine):
 
         product_data['lng'] = product_data.geometry.x
         product_data['lat'] = product_data.geometry.y
-
         product_data['timestamp'] = pd.to_datetime(product_data['timestamp'])
-
         product_data['h3'] = product_data.apply(lat_lng_to_h3, axis=1)
-
         product_data['dates'] = pd.to_datetime(product_data['timestamp']).dt.date
-
+        
         daily_data = product_data.groupby(['h3', 'dates'], as_index=False).mean('value')
-
         daily_data.set_index(['dates'])
-
         daily_data = daily_data.rename(columns={'value':f'{product}'})
 
         # cols = ['dates', 'h3', 'lat', 'lng']
