@@ -2,6 +2,7 @@ import pandas as pd
 import geopandas as gpd
 from h3 import h3
 import sys
+from pandas.io.sql import table_exists
 import psycopg2
 import psycopg2.extras as extras
 import heroku_config as config
@@ -10,37 +11,57 @@ import dbutils as dbutils
 from sqlalchemy import create_engine
 
 
-#limit 10000 because Heroku
-URL_HCHO = 'https://api.v2.emissions-api.org/api/v2/methane/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=10000&offset=0'
-
-bharat_hcho = gpd.read_file(URL_HCHO)
-
-bharat_hcho['lng'] = bharat_hcho.geometry.x
-bharat_hcho['lat'] = bharat_hcho.geometry.y
-
-bharat_hcho['timestamp'] = pd.to_datetime(bharat_hcho['timestamp'])
-
-
 def lat_lng_to_h3(row, h3_level=4):
     return h3.geo_to_h3(row.geometry.y, row.geometry.x, h3_level)
 
-bharat_hcho['h3'] = bharat_hcho.apply(lat_lng_to_h3, axis=1)
-bharat_hcho.set_index(['timestamp'])
 
-param_dic = {'host': config.DB_HOST, 'database': config.DB_NAME, 'user': config.DB_USER,
-             'password': config.DB_PASS}
 
-# DATABASE_URL = os.environ[config.DATABASE_URL]
+def load_data(engine):
+
+    emissions_df = pd.DataFrame()
+    cols = ['dates', 'h3', 'lat', 'lng']
+    products = ['methane', 'carbonmonoxide', 'ozone', 'nitrogendioxide']
+
+    for product in products:
+        #limit 10000 because Heroku, pulling 2500 rows for each product
+        url = f'https://api.v2.emissions-api.org/api/v2/{product}/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=2500&offset=0'
+
+        print(f'Pulling records for {product}')
+        product_data = gpd.read_file(url)
+        print('Pull success')
+
+        product_data['lng'] = product_data.geometry.x
+        product_data['lat'] = product_data.geometry.y
+
+        product_data['timestamp'] = pd.to_datetime(product_data['timestamp'])
+
+        product_data['h3'] = product_data.apply(lat_lng_to_h3, axis=1)
+
+        product_data['dates'] = pd.to_datetime(product_data['timestamp']).dt.date
+
+        daily_data = product_data.groupby(['h3', 'dates'], as_index=False).mean('value')
+
+        daily_data.set_index(['dates'])
+
+        daily_data = daily_data.rename(columns={'value':f'{product}'})
+
+        # cols = ['dates', 'h3', 'lat', 'lng']
+        if emissions_df.empty:
+            cols.extend([f'{product}'])
+            emissions_df = daily_data.copy()
+        else:
+            cols.extend([f'{product}'])
+            emissions_df = emissions_df.merge(daily_data[['dates','h3', f'{product}']], on=['dates', 'h3'])[cols]
+
+    emissions_df.to_sql('emissions', con = engine, if_exists='append')
+    return
+
 DATABASE_URL = config.DATABASE_URL
-
-conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
-
-# conn = connect(param_dic)
-
-# dbutils.execute_values(conn, bharat_hcho[['timestamp', 'value','lat','lng','h3']], 'hcho')
- 
 engine = create_engine(config.DATABASE_URL, echo = False)
 
-bharat_hcho[['timestamp', 'value','lat','lng','h3']].to_sql('hcho', con = engine, if_exists='append')
+first_row = engine.execute('SELECT * FROM emissions').fetchone()
 
-print(engine.execute('SELECT * FROM hcho').fetchone())
+if first_row is None:
+    print('Populating data')
+    load_data(engine)
+    print('Populate successful')

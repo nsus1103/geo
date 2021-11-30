@@ -5,8 +5,8 @@ import sys
 import psycopg2
 import psycopg2.extras as extras
 from sqlalchemy import create_engine
-import src.heroku_config as config
-# import heroku_config as config
+# import src.heroku_config as config
+import heroku_config as config
 import os
 
 
@@ -61,8 +61,12 @@ def return_h3_value(h3_index):
     # table_exists_flag = cursor.execute('SELECT * FROM hcho').fetchone()
     # print(table_exists_flag)
     
-    q = f"""SELECT value FROM hcho WHERE h3 = '{h3_index}';"""
-
+    # q = f"""SELECT methane FROM emissions WHERE h3 = '{h3_index}';"""
+    q = f"""SELECT *
+            FROM (SELECT dates, h3, methane, carbonmonoxide,ozone,nitrogendioxide, row_number() OVER (PARTITION BY h3 ORDER BY CAST(dates AS DATE) DESC) AS date_rank
+            FROM emissions
+            WHERE h3 = '{h3_index}') t
+            WHERE date_rank = 1;"""
     try:
         cursor.execute(q)
         data = cursor.fetchall()
@@ -75,7 +79,7 @@ def return_h3_value(h3_index):
         return 1
     cursor.close()
 
-def return_value_from_df(h3_index, h4_level):
-    hdf = bharat_hcho[bharat_hcho['h3'] == h3_index]
-    d = pd.Series(hdf['value'].values, index=hdf.timestamp).to_dict()
-    return {'data':{'h3_index':h3_index,'h4_level':h4_level, 'HCHO':d}}
+# def return_value_from_df(h3_index, h4_level):
+#     hdf = bharat_hcho[bharat_hcho['h3'] == h3_index]
+#     d = pd.Series(hdf['value'].values, index=hdf.timestamp).to_dict()
+#     return {'data':{'h3_index':h3_index,'h4_level':h4_level, 'HCHO':d}}
