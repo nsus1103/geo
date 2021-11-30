@@ -7,7 +7,7 @@ import psycopg2
 import psycopg2.extras as extras
 import heroku_config as config
 import os
-import src.dbutils as dbutils
+import dbutils as dbutils
 from sqlalchemy import create_engine
 
 
@@ -51,11 +51,11 @@ def load_data(engine):
     emissions_df.to_sql('emissions', con = engine, if_exists='append')
     return
 
-DATABASE_URL = config.DATABASE_URL
+DATABASE_URL = os.environ.get('DATABASE_URL')
 engine = create_engine(config.DATABASE_URL, echo = False)
 
 first_row = engine.execute('SELECT * FROM emissions').fetchone()
-
+print(first_row)
 if first_row is None:
     print('Populating data')
     load_data(engine)

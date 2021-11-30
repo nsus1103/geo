@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras as extras
 from sqlalchemy import create_engine
 # import src.heroku_config as config
-import src.heroku_config as config
+import heroku_config as config
 import os
 
 
@@ -18,7 +18,7 @@ def connect():
         print('Connecting to the PostgreSQL database...')
 
         # conn = psycopg2.connect(**params_dic)
-        DATABASE_URL = config.DATABASE_URL
+        DATABASE_URL = os.environ.get('DATABASE_URL')
         conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

@@ -4,3 +4,4 @@ __pycache__/
 pca.py
 products.py
 emissions_IND.csv
+heroku_config.py
