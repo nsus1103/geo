@@ -92,6 +92,10 @@ bharat_hcho.set_index(['timestamp'])
 param_dic = {'host': config.DB_HOST, 'database': config.DB_NAME, 'user': config.DB_USER,
              'password': config.DB_PASS}
 
-conn = connect(param_dic)
+DATABASE_URL = os.environ['DATABASE_URL']
+
+conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
+
+# conn = connect(param_dic)
 
 execute_values(conn, bharat_hcho[['timestamp', 'value','lat','lng','h3']], 'hcho')

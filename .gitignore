@@ -1,3 +1,6 @@
 .vscode/
 .venv/
 __pycache__/
+pca.py
+products.py
+emissions_IND.csv
