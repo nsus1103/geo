@@ -4,19 +4,22 @@ from h3 import h3
 import sys
 import psycopg2
 import psycopg2.extras as extras
+from sqlalchemy import create_engine
 import src.heroku_config as config
+# import heroku_config as config
 import os
 
 
-def connect(params_dic):
+def connect():
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
 
-        conn = psycopg2.connect(**params_dic)
-
+        # conn = psycopg2.connect(**params_dic)
+        DATABASE_URL = config.DATABASE_URL
+        conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         sys.exit(1)
@@ -51,11 +54,15 @@ def execute_values(conn, df, table):
 
 
 def return_h3_value(h3_index):
-    q = f"""SELECT value FROM hcho WHERE h3 = '{h3_index}';"""
-    param_dic = {'host': config.DB_HOST, 'database': config.DB_NAME, 'user': config.DB_USER,
-                 'password': config.DB_PASS}
-    conn = connect(param_dic)
+    
+    conn = connect()
     cursor = conn.cursor()
+
+    table_exists_flag = cursor.execute('SELECT * FROM hcho').fetchone()
+    print(table_exists_flag)
+    
+    q = f"""SELECT value FROM hcho WHERE h3 = '{h3_index}';"""
+
     try:
         cursor.execute(q)
         data = cursor.fetchall()
@@ -72,31 +79,3 @@ def return_value_from_df(h3_index, h4_level):
     hdf = bharat_hcho[bharat_hcho['h3'] == h3_index]
     d = pd.Series(hdf['value'].values, index=hdf.timestamp).to_dict()
     return {'data':{'h3_index':h3_index,'h4_level':h4_level, 'HCHO':d}}
-
-#limit 10000 because Heroku
-URL_HCHO = 'https://api.v2.emissions-api.org/api/v2/methane/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=10000&offset=0'
-
-bharat_hcho = gpd.read_file(URL_HCHO)
-
-bharat_hcho['lng'] = bharat_hcho.geometry.x
-bharat_hcho['lat'] = bharat_hcho.geometry.y
-
-bharat_hcho['timestamp'] = pd.to_datetime(bharat_hcho['timestamp'])
-
-
-def lat_lng_to_h3(row, h3_level=4):
-    return h3.geo_to_h3(row.geometry.y, row.geometry.x, h3_level)
-
-bharat_hcho['h3'] = bharat_hcho.apply(lat_lng_to_h3, axis=1)
-bharat_hcho.set_index(['timestamp'])
-
-param_dic = {'host': config.DB_HOST, 'database': config.DB_NAME, 'user': config.DB_USER,
-             'password': config.DB_PASS}
-
-DATABASE_URL = os.environ['DATABASE_URL']
-
-conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
-
-# conn = connect(param_dic)
-
-execute_values(conn, bharat_hcho[['timestamp', 'value','lat','lng','h3']], 'hcho')
