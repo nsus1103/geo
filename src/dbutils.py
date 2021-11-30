@@ -58,8 +58,8 @@ def return_h3_value(h3_index):
     conn = connect()
     cursor = conn.cursor()
 
-    table_exists_flag = cursor.execute('SELECT * FROM hcho').fetchone()
-    print(table_exists_flag)
+    # table_exists_flag = cursor.execute('SELECT * FROM hcho').fetchone()
+    # print(table_exists_flag)
     
     q = f"""SELECT value FROM hcho WHERE h3 = '{h3_index}';"""
 
