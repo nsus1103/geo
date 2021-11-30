@@ -1,8 +1,8 @@
 from h3 import h3
 from fastapi import FastAPI
 import uvicorn
-# import src.dbutils as dbutils
-import dbutils as dbutils
+import src.dbutils as dbutils
+# import dbutils as dbutils
 
 app = FastAPI()
 
