@@ -5,6 +5,7 @@ import sys
 import psycopg2
 import psycopg2.extras as extras
 import src.heroku_config as config
+import os
 
 
 def connect(params_dic):
