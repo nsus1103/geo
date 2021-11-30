@@ -52,7 +52,7 @@ def load_data(engine):
     return
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
-engine = create_engine(config.DATABASE_URL, echo = False)
+engine = create_engine(DATABASE_URL, echo = False)
 
 first_row = engine.execute('SELECT * FROM emissions').fetchone()
 print(first_row)

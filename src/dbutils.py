@@ -19,7 +19,7 @@ def connect():
 
         # conn = psycopg2.connect(**params_dic)
         DATABASE_URL = os.environ.get('DATABASE_URL')
-        conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         sys.exit(1)
