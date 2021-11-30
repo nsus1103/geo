@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras as extras
 from sqlalchemy import create_engine
 # import src.heroku_config as config
-import heroku_config as config
+import src.heroku_config as config
 import os
 
 
