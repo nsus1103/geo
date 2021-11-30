@@ -4,7 +4,7 @@ from h3 import h3
 import sys
 import psycopg2
 import psycopg2.extras as extras
-import src.config as config
+import src.heroku_config as config
 
 
 def connect(params_dic):
@@ -22,6 +22,9 @@ def connect(params_dic):
     print("Connection successful")
     return conn
 
+
+def create_db():
+    pass
 
 def execute_values(conn, df, table):
     """
@@ -69,8 +72,8 @@ def return_value_from_df(h3_index, h4_level):
     d = pd.Series(hdf['value'].values, index=hdf.timestamp).to_dict()
     return {'data':{'h3_index':h3_index,'h4_level':h4_level, 'HCHO':d}}
 
-
-URL_HCHO = 'https://api.v2.emissions-api.org/api/v2/methane/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=10000000&offset=0'
+#limit 10000 because Heroku
+URL_HCHO = 'https://api.v2.emissions-api.org/api/v2/methane/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=10000&offset=0'
 
 bharat_hcho = gpd.read_file(URL_HCHO)
 
@@ -88,6 +91,7 @@ bharat_hcho.set_index(['timestamp'])
 
 param_dic = {'host': config.DB_HOST, 'database': config.DB_NAME, 'user': config.DB_USER,
              'password': config.DB_PASS}
-# conn = connect(param_dic)
 
-# execute_values(conn, bharat_hcho[['timestamp', 'value','lat','lng','h3']], 'hcho')
+conn = connect(param_dic)
+
+execute_values(conn, bharat_hcho[['timestamp', 'value','lat','lng','h3']], 'hcho')
