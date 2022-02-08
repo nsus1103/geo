@@ -5,3 +5,4 @@ pca.py
 products.py
 emissions_IND.csv
 heroku_config.py
+normalize-test.ipynb
