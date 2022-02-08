@@ -63,7 +63,7 @@ def return_h3_value(h3_index):
     
     # q = f"""SELECT methane FROM emissions WHERE h3 = '{h3_index}';"""
     q = f"""SELECT *
-            FROM (SELECT dates, h3, methane, carbonmonoxide,ozone,nitrogendioxide, row_number() OVER (PARTITION BY h3 ORDER BY CAST(dates AS DATE) DESC) AS date_rank
+            FROM (SELECT dates, h3, methane_scaled, carbonmonoxide_scaled,ozone_scaled,nitrogendioxide_scaled, row_number() OVER (PARTITION BY h3 ORDER BY CAST(dates AS DATE) DESC) AS date_rank
             FROM emissions
             WHERE h3 = '{h3_index}') t
             WHERE date_rank = 1;"""
