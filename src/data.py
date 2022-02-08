@@ -9,8 +9,7 @@ import psycopg2.extras as extras
 import os
 import dbutils as dbutils
 from sqlalchemy import create_engine
-import datetime
-from datetime import date
+
 
 def lat_lng_to_h3(row, h3_level=4):
     return h3.geo_to_h3(row.geometry.y, row.geometry.x, h3_level)
@@ -23,14 +22,9 @@ def load_data(engine):
     cols = ['dates', 'h3', 'lat', 'lng']
     products = ['methane', 'carbonmonoxide', 'ozone', 'nitrogendioxide']
 
-    days = 10
-    date0 = datetime.datetime.today() - datetime.timedelta(days=days) #n=1
-    begin = str(date0).split(' ')[0]
-    end = str(date.today())
-
     for product in products:
         #limit 10000 because Heroku, pulling 2500 rows for each product
-        url = f'https://api.v2.emissions-api.org/api/v2/{product}/geo.json?country=IND&begin={begin}&end={end}&limit=2500&offset=0'
+        url = f'https://api.v2.emissions-api.org/api/v2/{product}/geo.json?country=IND&begin=2021-01-01&end=2021-11-11&limit=2500&offset=0'
 
         print(f'Pulling records for {product}')
         product_data = gpd.read_file(url)
@@ -54,8 +48,6 @@ def load_data(engine):
             cols.extend([f'{product}'])
             emissions_df = emissions_df.merge(daily_data[['dates','h3', f'{product}']], on=['dates', 'h3'])[cols]
 
-    min_, max_ = emissions_df[f'{product}'].min(), emissions_df[f'{product}'].max()
-    emissions_df[f'{product}_scaled'] = (emissions_df[f'{product}']-min_)/(max_-min_)
     emissions_df.to_sql('emissions', con = engine, if_exists='append')
     return
 
